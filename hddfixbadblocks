@@ -1,6 +1,6 @@
 #!/bin/bash
 
-baddrive='/dev/sda'
+baddrive='/dev/sdX'
 badsect=1
 echo Testing from LBA $badsect
 echo "Waiting for test to stop (each dot is 5 sec)"
