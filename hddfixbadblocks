@@ -1,0 +1,17 @@
+#!/bin/bash
+
+baddrive='/dev/sda'
+badsect=1
+echo Testing from LBA $badsect
+echo "Waiting for test to stop (each dot is 5 sec)"
+while [ "$(smartctl -l selective ${baddrive} | awk '/^ *1/{print $4}')" = "Self_test_in_progess" ] || [ "$(smartctl -l selective ${baddrive} | awk '/^ *1/{print $4}')" = "Not_testing" ] || [ "$(smartctl -l selective ${baddrive} | awk '/^ *1/{print $4}')" = "Completed_read_failure" ]; do
+  smartctl -t select,${badsect}-max ${baddrive} 2>&1 >> /dev/null
+ while [ "$(smartctl -l selective ${baddrive} | awk '/^ *1/{print substr($4,1,9)}')" != "Completed" ] ; do 
+   echo -n .
+    sleep 5
+  done
+  badsect=$(smartctl -l selftest ${baddrive} | awk '/# 1  Selective offline   Completed: read failure/ {print $10}')
+  [ $badsect = "-" ] || [ $badsect = "" ] && exit 0
+  echo -n X
+  hdparm --repair-sector ${badsect} --yes-i-know-what-i-am-doing $baddrive > /dev/null
+done
